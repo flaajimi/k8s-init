@@ -27,12 +27,33 @@ spec:
       containers:
       - image: nginx:1.24
         name: www
+        env:
+          - name: USER
+            value: bob
         ports:
           # "alias" de port pour être utilisé dans les services
           - name: http
             containerPort: 80
+        volumeMounts:
+          - name: data
+            # emplacement dans le container
+            mountPath: /etc/nginx/conf.d
+            subPath: conf_nginx
       - image: php:8.2-fpm
         name: php
         ports:
           - name: fpm
             containerPort: 9000
+        volumeMounts:
+          - name: data
+            # emplacement dans le container
+            mountPath: /var/www/html
+            subPath: siteweb
+      volumes:
+        # k8s utilise une convention kebab-case et non snake_case
+        - name: data
+          nfs:
+            server: 192.168.50.4
+            ## correspond à /usr/local/partage
+            path: /
+            readOnly: true
